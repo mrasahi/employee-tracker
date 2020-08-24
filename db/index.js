@@ -7,5 +7,7 @@ const db = mysql.createConnection({
     database: 'employee_db'
 })
 
+// const db = mysql.createConnection('mysql://root:rootroot@localhost/employee_db')
+
 
 module.exports = db

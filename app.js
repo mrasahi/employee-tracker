@@ -5,7 +5,7 @@ const path = require('path')
 const fs = require('fs')
 const db = require('./db')
 
-
+// employee data joined with role and departments
 const employeeFullView = `
 SELECT employee.id, employee.first_name, employee.last_name,
   role.title, role.salary, department.name AS department,
@@ -98,7 +98,7 @@ const viewMenu = () => {
                                 {
                                     type: 'list',
                                     name: 'manager',
-                                    message: 'Viewing employees by manager',
+                                    message: 'Viewing employees under manager',
                                     choices: employees
                                 }
                             ])
@@ -120,11 +120,19 @@ const viewMenu = () => {
                     break
                 case 'View departments':
                     console.log('Viewing departments')
-                    viewMenu()
+                    db.query('SELECT * FROM department', (err, department) => {
+                        if (err) {console.log(err)}
+                        console.table(department)
+                        viewMenu()
+                    })
                     break
                 case 'View roles':
                     console.log('Viewing roles')
-                    viewMenu()
+                    db.query('SELECT role.title, role.salary, department.name AS department FROM role LEFT JOIN department ON role.department_id = department.id', (err, role) => {
+                        if (err) {console.log(err)}
+                        console.table(role)
+                        viewMenu()
+                    })
                     break
                 case 'Return to main menu':
                     console.log('Returning to main menu')

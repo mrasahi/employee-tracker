@@ -3,7 +3,8 @@
 Homework12 - Makoto Asahi
 
 Preview Video Link:
--- in progress --
+
+https://drive.google.com/file/d/1gF4fHrRLVqzFTGdOVeMYTC4Loog5dtlD/view
 
 # Description
 

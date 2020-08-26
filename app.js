@@ -164,6 +164,7 @@ const addMenu = () => {
             name: department.name,
             value: department.id
         }))
+    // Prepend None to employee list when selecting employee's manager
     employees.unshift({ name: 'None', value: null })
     // Add Menu question prompt
     inquirer
@@ -205,7 +206,6 @@ const addMenu = () => {
                             }
                         ])
                         .then(answer => {
-                            console.log(answer)
                             db.query('INSERT INTO employee SET ?', answer, (err) => {
                                 if (err) {
                                     console.log(err)
@@ -289,6 +289,24 @@ const addMenu = () => {
 }
 
 const removeMenu = () => {
+    // Makes roles, employees, and departments as listable choices
+    db.query('SELECT * FROM role', (err, roles) => {
+        if (err) { console.log(err) }
+        roles = roles.map(role => ({
+            name: role.title,
+            value: role.id
+        }))
+    db.query('SELECT * FROM employee', (err, employees) => {
+        employees = employees.map(employee => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+        }))
+    db.query('SELECT * FROM department', (err, departments) => {
+        if (err) { console.log(err) }
+        departments = departments.map(department => ({
+            name: department.name,
+            value: department.id
+        }))
     inquirer
         .prompt([
             {
@@ -301,13 +319,92 @@ const removeMenu = () => {
         .then(answer => {
             switch (answer.removeMenu) {
                 case 'Employee':
-                    removeEmployee()
+                    employees.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'employee_id',
+                                message: 'Please select an employee to remove',
+                                choices: employees
+                            }
+                        ])
+                        .then(answer => {
+                            if (answer.employee_id === null) {
+                                console.log('Returning to menu')
+                                removeMenu()
+                            } else {
+                                db.query('DELETE FROM employee WHERE id = ?', answer.employee_id, (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Employee has been removed from the employee table`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Department':
-                    removeDepartment()
+                    departments.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'department_id',
+                                message: 'Please select a department to remove',
+                                choices: departments
+                            }
+                        ])
+                        .then(answer => {
+                            if (answer.department_id === null) {
+                                console.log('Returning to menu')
+                                removeMenu()
+                            } else {
+                                db.query('DELETE FROM department WHERE id = ?', answer.department_id, (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Department has been removed from the department table`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
                     break
                 case 'Role':
-                    removeRole()
+                    roles.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'role_id',
+                                message: 'Please select a role to remove',
+                                choices: roles
+                            }
+                        ])
+                        .then(answer => {
+                            if (answer.role_id === null) {
+                                console.log('Returning to menu')
+                                removeMenu()
+                            } else {
+                                db.query('DELETE FROM role WHERE id = ?', answer.role_id, (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Role has been removed from the role table`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
                     break
                 case 'Return to Main Menu':
                     mainMenu()
@@ -315,9 +412,30 @@ const removeMenu = () => {
             }
         })
         .catch(err => { console.log(err) })
+    })
+    })
+    })
 }
 
 const updateMenu = () => {
+    // Makes roles, employees, and departments as listable choices
+    db.query('SELECT * FROM role', (err, roles) => {
+        if (err) { console.log(err) }
+        roles = roles.map(role => ({
+            name: role.title,
+            value: role.id
+        }))
+    db.query('SELECT * FROM employee', (err, employees) => {
+        employees = employees.map(employee => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+        }))
+    db.query('SELECT * FROM department', (err, departments) => {
+        if (err) { console.log(err) }
+        departments = departments.map(department => ({
+            name: department.name,
+            value: department.id
+        }))
     inquirer
         .prompt([
             {
@@ -330,10 +448,45 @@ const updateMenu = () => {
         .then(answer => {
             switch (answer.updateMenu) {
                 case 'Employee':
-                    updateEmployee()
+                    employees.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'employee_id',
+                                message: 'Please select an employee to update',
+                                choices: employees
+                            },
+                            {
+                                type: 'list',
+                                name: 'role_id',
+                                message: 'Please choose a new role for the employee',
+                                choices: roles
+                            }
+                        ])
+                        .then(answer => {
+                            console.log(answer.role_id)
+                            console.log(answer.employee_id)
+                            if (answer.employee_id === null) {
+                                console.log('Returning to menu')
+                                updateMenu()
+                            } else {
+                                db.query('UPDATE employee SET role_id = ? WHERE employee.id = ?', [answer.role_id, answer.employee_id], (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Employee updated with new role`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Department':
-                    updateDepartment()
+                    
                     break
                 case 'Role':
                     updateRole()
@@ -344,6 +497,9 @@ const updateMenu = () => {
             }
         })
         .catch(err => { console.log(err) })
+    })
+    })
+    })
 }
 
 

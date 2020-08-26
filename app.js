@@ -103,7 +103,7 @@ const viewMenu = () => {
                                 }
                             ])
                             .then(answer => {
-                                if (answer.manager === null) {
+                                if (answer.manager !== null) {
                                     db.query(`${employeeFullView} WHERE employee.manager_id = ?`, answer.manager, (err, byManager) => {
                                         if (err) { console.log(err) }
                                         console.table(byManager)
@@ -486,10 +486,74 @@ const updateMenu = () => {
                         .catch(err => { console.log(err) })
                     break
                 case 'Department':
-                    
+                    departments.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'department_id',
+                                message: 'Please select a department to update',
+                                choices: departments
+                            },
+                            {
+                                type: 'input',
+                                name: 'department_name',
+                                message: 'Please input a name for the department',
+                            }
+                        ])
+                        .then(answer => {
+                            if (answer.department_id === null) {
+                                console.log('Returning to menu')
+                                updateMenu()
+                            } else {
+                                db.query('UPDATE department SET department.name = ? WHERE department.id = ?', [answer.department_name, answer.department_id], (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Department name has been updated`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Role':
-                    updateRole()
+                    roles.unshift({ name: 'Return to menu', value: null })
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'list',
+                                name: 'role_id',
+                                message: 'Please select a role to update',
+                                choices: roles
+                            },
+                            {
+                                type: 'input',
+                                name: 'role_salary',
+                                message: 'Please input a new salary for the role',
+                            }
+                        ])
+                        .then(answer => {
+                            if (answer.department_id === null) {
+                                console.log('Returning to menu')
+                                updateMenu()
+                            } else {
+                                db.query('UPDATE role SET role.salary = ? WHERE role.id = ?', [answer.role_salary, answer.role_id], (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                        console.log('An error has occured. Returning to menu')
+                                        removeMenu()
+                                    } else {
+                                        console.log(`Role salary has been updated`)
+                                        mainMenu()
+                                    }
+                                })
+                            }
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Return to Main Menu':
                     mainMenu()

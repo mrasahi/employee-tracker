@@ -105,7 +105,7 @@ const viewMenu = () => {
                             .then(answer => {
                                 if (answer.manager === null) {
                                     db.query(`${employeeFullView} WHERE employee.manager_id = ?`, answer.manager, (err, byManager) => {
-                                        if (err) {console.log(err)}
+                                        if (err) { console.log(err) }
                                         console.table(byManager)
                                         viewMenu()
                                     })
@@ -121,7 +121,7 @@ const viewMenu = () => {
                 case 'View departments':
                     console.log('Viewing departments')
                     db.query('SELECT * FROM department', (err, department) => {
-                        if (err) {console.log(err)}
+                        if (err) { console.log(err) }
                         console.table(department)
                         viewMenu()
                     })
@@ -129,7 +129,7 @@ const viewMenu = () => {
                 case 'View roles':
                     console.log('Viewing roles')
                     db.query('SELECT role.title, role.salary, department.name AS department FROM role LEFT JOIN department ON role.department_id = department.id', (err, role) => {
-                        if (err) {console.log(err)}
+                        if (err) { console.log(err) }
                         console.table(role)
                         viewMenu()
                     })
@@ -146,6 +146,26 @@ const viewMenu = () => {
 
 
 const addMenu = () => {
+    // Makes roles and employees as listable choices
+    db.query('SELECT * FROM role', (err, roles) => {
+        if (err) { console.log(err) }
+        roles = roles.map(role => ({
+            name: role.title,
+            value: role.id
+        }))
+    db.query('SELECT * FROM employee', (err, employees) => {
+        employees = employees.map(employee => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+        }))
+    db.query('SELECT * FROM department', (err, departments) => {
+        if (err) { console.log(err) }
+        departments = departments.map(department => ({
+            name: department.name,
+            value: department.id
+        }))
+    employees.unshift({ name: 'None', value: null })
+    // Add Menu question prompt
     inquirer
         .prompt([
             {
@@ -157,14 +177,105 @@ const addMenu = () => {
         ])
         .then(answer => {
             switch (answer.addMenu) {
+                // Add Employee
                 case 'Employee':
-                    addEmployee()
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'input',
+                                name: 'first_name',
+                                message: `What is the employee's first name?`
+                            },
+                            {
+                                type: 'input',
+                                name: 'last_name',
+                                message: `What is the employee's last name?`
+                            },
+                            {
+                                type: 'list',
+                                name: 'role_id',
+                                message: `Please select the employee's role.`,
+                                choices: roles
+                            },
+                            {
+                                type: 'list',
+                                name: 'manager_id',
+                                message: 'Who is the manager of this employee?',
+                                choices: employees
+                            }
+                        ])
+                        .then(answer => {
+                            console.log(answer)
+                            db.query('INSERT INTO employee SET ?', answer, (err) => {
+                                if (err) {
+                                    console.log(err)
+                                    console.log('An error has occured. Returning to menu')
+                                    addMenu()
+                                } else {
+                                    console.log(`Employee ${answer.first_name} ${answer.last_name} has been added to the employee table`)
+                                    mainMenu()
+                                }
+                            })
+                        })
+                        .catch(err => { console.log(err) })
                     break
+                // Add Department
                 case 'Department':
-                    addDepartment()
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'input',
+                                name: 'name',
+                                message: 'Please input a name for the department'
+                            }
+                        ])
+                        .then(answer => {
+                            db.query('INSERT INTO department SET ?', answer, (err) => {
+                                if (err) {
+                                    console.log(err)
+                                    console.log('An error has occured. Returning to menu')
+                                    addMenu()
+                                } else {
+                                    console.log(`Department ${answer.name} has been added to the department table`)
+                                    mainMenu()
+                                }
+                            })
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Role':
-                    addRole()
+                    inquirer
+                        .prompt([
+                            {
+                                type: 'input',
+                                name: 'title',
+                                message: 'Please enter a title for the role'
+                            },
+                            {
+                                type: 'input',
+                                name: 'salary',
+                                message: 'Please enter a salary for this role'
+                            },
+                            {
+                                type: 'list',
+                                name: 'department_id',
+                                message: 'Please select which department this role is under',
+                                choices: departments
+                            }
+                        ])
+                        .then(answer => {
+                            db.query('INSERT INTO role SET ?', answer, (err) => {
+                                if (err) {
+                                    console.log(err)
+                                    console.log('An error has occured. Returning to menu')
+                                    addMenu()
+                                } else {
+                                    console.log(`Role ${answer.title} has been added to the roles table`)
+                                    mainMenu()
+                                }
+                            })
+                        })
+                        .catch(err => { console.log(err) })
                     break
                 case 'Return to Main Menu':
                     mainMenu()
@@ -172,6 +283,9 @@ const addMenu = () => {
             }
         })
         .catch(err => { console.log(err) })
+    })
+    })
+    })
 }
 
 const removeMenu = () => {
